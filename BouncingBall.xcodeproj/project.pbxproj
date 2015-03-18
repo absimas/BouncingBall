@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4086833D1AB9BA63004568D4 /* BackgroundNode.swift */; };
 		40DEA06C1AB9889700308FB0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA06B1AB9889700308FB0 /* AppDelegate.swift */; };
 		40DEA06F1AB9889700308FB0 /* BouncingBall.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA06D1AB9889700308FB0 /* BouncingBall.xcdatamodeld */; };
 		40DEA0711AB9889700308FB0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA0701AB9889700308FB0 /* ViewController.swift */; };
@@ -14,6 +15,7 @@
 		40DEA0761AB9889700308FB0 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 40DEA0751AB9889700308FB0 /* Images.xcassets */; };
 		40DEA0791AB9889700308FB0 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 40DEA0771AB9889700308FB0 /* LaunchScreen.xib */; };
 		40DEA0851AB9889700308FB0 /* BouncingBallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA0841AB9889700308FB0 /* BouncingBallTests.swift */; };
+		40DEA08F1AB99AC900308FB0 /* GameScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA08E1AB99AC900308FB0 /* GameScene.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -27,6 +29,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4086833D1AB9BA63004568D4 /* BackgroundNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundNode.swift; sourceTree = "<group>"; };
 		40DEA0661AB9889700308FB0 /* BouncingBall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BouncingBall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		40DEA06A1AB9889700308FB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		40DEA06B1AB9889700308FB0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -38,6 +41,7 @@
 		40DEA07E1AB9889700308FB0 /* BouncingBallTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BouncingBallTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		40DEA0831AB9889700308FB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		40DEA0841AB9889700308FB0 /* BouncingBallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BouncingBallTests.swift; sourceTree = "<group>"; };
+		40DEA08E1AB99AC900308FB0 /* GameScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameScene.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,13 +83,11 @@
 		40DEA0681AB9889700308FB0 /* BouncingBall */ = {
 			isa = PBXGroup;
 			children = (
-				40DEA06B1AB9889700308FB0 /* AppDelegate.swift */,
-				40DEA0701AB9889700308FB0 /* ViewController.swift */,
-				40DEA0721AB9889700308FB0 /* Main.storyboard */,
-				40DEA0751AB9889700308FB0 /* Images.xcassets */,
-				40DEA0771AB9889700308FB0 /* LaunchScreen.xib */,
-				40DEA06D1AB9889700308FB0 /* BouncingBall.xcdatamodeld */,
 				40DEA0691AB9889700308FB0 /* Supporting Files */,
+				40DEA0701AB9889700308FB0 /* ViewController.swift */,
+				4086833D1AB9BA63004568D4 /* BackgroundNode.swift */,
+				40DEA0721AB9889700308FB0 /* Main.storyboard */,
+				40DEA08E1AB99AC900308FB0 /* GameScene.swift */,
 			);
 			path = BouncingBall;
 			sourceTree = "<group>";
@@ -93,6 +95,10 @@
 		40DEA0691AB9889700308FB0 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				40DEA06B1AB9889700308FB0 /* AppDelegate.swift */,
+				40DEA0751AB9889700308FB0 /* Images.xcassets */,
+				40DEA06D1AB9889700308FB0 /* BouncingBall.xcdatamodeld */,
+				40DEA0771AB9889700308FB0 /* LaunchScreen.xib */,
 				40DEA06A1AB9889700308FB0 /* Info.plist */,
 			);
 			name = "Supporting Files";
@@ -216,8 +222,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				40DEA0711AB9889700308FB0 /* ViewController.swift in Sources */,
+				40DEA08F1AB99AC900308FB0 /* GameScene.swift in Sources */,
 				40DEA06C1AB9889700308FB0 /* AppDelegate.swift in Sources */,
 				40DEA06F1AB9889700308FB0 /* BouncingBall.xcdatamodeld in Sources */,
+				4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -411,6 +419,7 @@
 				40DEA08A1AB9889700308FB0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		40DEA08B1AB9889700308FB0 /* Build configuration list for PBXNativeTarget "BouncingBallTests" */ = {
 			isa = XCConfigurationList;
@@ -419,6 +428,7 @@
 				40DEA08D1AB9889700308FB0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
