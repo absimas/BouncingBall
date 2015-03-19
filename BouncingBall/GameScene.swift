@@ -31,13 +31,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let ACTION_MOVEMENT = "action_movement"
     
     var ballNode: SKNode?
-    var backgroundNode: SKNode?
+    var backgroundNode: BackgroundNode?
     
     enum ContactCategory: UInt32 {
-        case Floor    = 1
-        case Scene    = 2
-        case Ball     = 4
-        case Obstacle = 8
+        case Floor   = 1
+        case Scene   = 2
+        case Ball    = 4
+        case Step    = 8
         case Ceiling = 16
     }
     
@@ -48,6 +48,10 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func update(currentTime: NSTimeInterval) {
+        // ToDo remove steps which move outside here instead of with an action
     }
     
     override init(size: CGSize) {
@@ -61,38 +65,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     override func didMoveToView(view: SKView) {
-        // Scene now visible, start adding obstacles every second
-        let action = SKAction.runBlock(addRandomObstacle)
-        let delay = SKAction.waitForDuration(1)
-        let sequence = SKAction.sequence([action, delay])
-//        runAction(SKAction.repeatActionForever(sequence))
-    }
-    
-    func randRange (lower: Int , upper: Int) -> CGFloat {
-        return CGFloat(lower + Int(arc4random_uniform(UInt32(upper - lower + 1))))
-    }
-    
-    // Contact delegate
-    func didBeginContact(contact: SKPhysicsContact) {
-        let bitMaskA = contact.bodyA.categoryBitMask
-        let bitMaskB = contact.bodyB.categoryBitMask
-        let ballCat = ContactCategory.Ball.rawValue
-        let obstacleCat = ContactCategory.Obstacle.rawValue
-        let ceilingCat = ContactCategory.Ceiling.rawValue
-        
-        // Make sure the minimum impulse was reached
-        // Make sure a ball and an obstacle collided
-        if (bitMaskA == ballCat && bitMaskB == obstacleCat) {
-            contact.bodyA.node?.runAction(SKAction.scaleBy(COLLISION_SCALE, duration: COLLISION_SCALE_DURATION))
-        } else if (bitMaskA == obstacleCat && bitMaskB == ballCat) {
-            contact.bodyB.node?.runAction(SKAction.scaleBy(COLLISION_SCALE, duration: COLLISION_SCALE_DURATION))
-        } else if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
-            // Ball reached the limit, scroll up
-            
-        }
-        
-        println(contact.bodyA)
-        println(contact.bodyB)
+        backgroundNode?.addStepsFrom(ballJumpHeight!)
     }
     
     // ToDo anchor on the bottom of the ball? so it move up when Y axis is scaled
@@ -114,47 +87,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         node.runAction(sequence)
     }
     
-    func addRandomObstacle() {
-        let obstacleMinHeight = Int(frame.height / 15)
-        let obstacleMaxHeight = Int(frame.height / 5)
-        let randHeight = randRange(obstacleMinHeight, upper: obstacleMaxHeight)
-        let size = CGSize(width: OBSTACLE_WIDTH, height: randHeight)
-        
-        // Physics
-        let physicsBody = SKPhysicsBody(rectangleOfSize: size)
-        physicsBody.categoryBitMask = ContactCategory.Obstacle.rawValue
-        physicsBody.contactTestBitMask = ContactCategory.Obstacle.rawValue | ContactCategory.Ball.rawValue
-        physicsBody.collisionBitMask = ContactCategory.Obstacle.rawValue | ContactCategory.Ball.rawValue
-        
-        let obstacle = SKSpriteNode(color: SKColor.blackColor(), size: size)
-        obstacle.position = CGPoint(x: frame.size.width, y: randRange(50, upper: Int(frame.size.height - 50)))
-        obstacle.physicsBody = physicsBody
-        
-        let moveAction = SKAction.moveByX(-50, y: 0, duration: MOVEMENT_TIME)
-        let repetitionCount = (frame.size.width - position.x) / 50
-        obstacle.runAction(SKAction.repeatActionForever(
-            SKAction.sequence([
-                SKAction.runBlock({
-                    self.shiftObstacle(obstacle)
-                }),
-                SKAction.waitForDuration(MOVEMENT_TIME)
-                ])
-            ))
-        
-        
-        
-        addChild(obstacle)
-    }
-    
-    func shiftObstacle(obstacle: SKNode) {
-        if (obstacle.position.x + obstacle.frame.width < 0) {
-            obstacle.removeAllActions()
-            obstacle.removeFromParent()
-        } else {
-            obstacle.runAction(SKAction.moveByX(-MOVEMENT_STEP, y: 0, duration: MOVEMENT_TIME))
-        }
-    }
-    
     func addFloor(color: SKColor, size: CGSize) {
         let floor = SKSpriteNode(color: color, size: size)
         floor.anchorPoint = CGPoint(x: 0, y: 0)
@@ -171,22 +103,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func addBackground(color: SKColor, height: CGFloat) {
-        backgroundNode = SKSpriteNode(color: color, size: CGSize(width: frame.width, height: height))
-        
-        // Physics
-        let physicsBody = SKPhysicsBody(edgeLoopFromRect: frame) // use scene frame edges
-        physicsBody.dynamic = false
-        physicsBody.categoryBitMask = ContactCategory.Floor.rawValue
-        physicsBody.contactTestBitMask = ContactCategory.Floor.rawValue | ContactCategory.Ball.rawValue
-        physicsBody.collisionBitMask = ContactCategory.Floor.rawValue | ContactCategory.Ball.rawValue
-        backgroundNode!.physicsBody = physicsBody
-        backgroundNode!.name = FLOOR_NAME
+        backgroundNode = BackgroundNode(size: CGSize(width: frame.width, height: height))
+        backgroundNode?.anchorPoint = CGPoint(x: 0, y: 0)
         addChild(backgroundNode!)
     }
     
     func addCeiling(size: CGSize, position: CGPoint) {
         let ceiling = SKSpriteNode(color: SKColor.redColor(), size: size)
         ceiling.position = position
+        ceiling.anchorPoint = CGPoint(x: 0, y: 0)
         
         // Physics
         let physicsBody = SKPhysicsBody(edgeLoopFromRect: frame) // use scene frame edges
@@ -211,14 +136,15 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsBody.mass = 0
         physicsBody.dynamic = true
         physicsBody.categoryBitMask = ContactCategory.Ball.rawValue
-        physicsBody.contactTestBitMask = ContactCategory.Ball.rawValue | ContactCategory.Floor.rawValue | ContactCategory.Scene.rawValue
-        physicsBody.collisionBitMask = ContactCategory.Ball.rawValue | ContactCategory.Floor.rawValue | ContactCategory.Scene.rawValue
+        physicsBody.contactTestBitMask = ContactCategory.Ball.rawValue | ContactCategory.Floor.rawValue | ContactCategory.Scene.rawValue | ContactCategory.Step.rawValue
+        physicsBody.collisionBitMask = ContactCategory.Ball.rawValue | ContactCategory.Floor.rawValue | ContactCategory.Scene.rawValue | ContactCategory.Step.rawValue
         ball.physicsBody = physicsBody
         ball.position = position
         ball.fillColor = color
         addChild(ball)
         
         ballJumpHeight = position.y
+        println("height \(ballJumpHeight)")
         
         // Set the main node!
         ballNode = ball
@@ -268,6 +194,43 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     
     override func touchesCancelled(touches: NSSet!, withEvent event: UIEvent!) {
         touchesEnded(touches, withEvent: event)
+    }
+    
+    // Contact delegate
+    func didBeginContact(contact: SKPhysicsContact) {
+        let bitMaskA = contact.bodyA.categoryBitMask
+        let bitMaskB = contact.bodyB.categoryBitMask
+        let ballCat = ContactCategory.Ball.rawValue
+        let stepCat = ContactCategory.Step.rawValue
+        let ceilingCat = ContactCategory.Ceiling.rawValue
+        
+        if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
+            // Ball reached the limit, scroll up
+            if let bgNode = backgroundNode {
+                bgNode.scrollUp()
+                println("scrolled to \(bgNode.position.y)")
+            }
+        } else if ((bitMaskA == ballCat && bitMaskB == stepCat) || (bitMaskA == stepCat && bitMaskB == ballCat)) {
+            println(contact.collisionImpulse)
+            contact.bodyB.applyAngularImpulse(max(1350 - contact.collisionImpulse, 0))
+        }
+        
+        // Move action + restitution 0
+//        let floorCat = ContactCategory.Floor.rawValue
+//        
+//        if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
+//            // Ball reached the limit, scroll up
+//            if let bgNode = backgroundNode {
+//                bgNode.scrollUp()
+//                println("scrolled to \(bgNode.position.y)")
+//            }
+//        } else if ((bitMaskA == ballCat && bitMaskB == stepCat) || (bitMaskA == stepCat && bitMaskB == ballCat)) {
+//            ballNode?.removeActionForKey("action_jump")
+//            ballNode?.runAction(SKAction.moveByX(0, y: ballJumpHeight!, duration: 1), withKey: "action_jump")
+//        } else if ((bitMaskA == ballCat && bitMaskB == floorCat) || (bitMaskA == floorCat && bitMaskB == ballCat)) {
+//            ballNode?.removeActionForKey("action_jump")
+//            ballNode?.runAction(SKAction.moveByX(0, y: ballJumpHeight!, duration: 1), withKey: "action_jump")
+//        }
     }
     
 }
