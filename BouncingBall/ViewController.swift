@@ -38,7 +38,7 @@ class ViewController: UIViewController {
         scene!.addBall(SKColor.blueColor(), radius: 30,
                 position: CGPoint(x: sceneWidth / 2, y: sceneHeight / 2))
         scene!.addCeiling(CGSize(width: sceneWidth, height: 10),
-            position: CGPoint(x: 0, y: sceneHeight * 2 / 3))
+            position: CGPoint(x: 0, y: sceneHeight * 4 / 5))
         scene!.addBackground(SKColor.clearColor(), height: 5000)
         
         // Animate scene entry

@@ -9,6 +9,7 @@
 import Foundation
 import SpriteKit
 import UIKit
+import GLKit
 
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
@@ -203,34 +204,50 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         let ballCat = ContactCategory.Ball.rawValue
         let stepCat = ContactCategory.Step.rawValue
         let ceilingCat = ContactCategory.Ceiling.rawValue
+        let floorCat = ContactCategory.Floor.rawValue
         
+        // Remove ball dx velocity
+        ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
+        
+        println("Impulse : \(contact.collisionImpulse)")
         if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
-            // Ball reached the limit, scroll up
+            // Ceiling contact
+            println("Ceiling contact at \(contact.contactPoint.y)")
             if let bgNode = backgroundNode {
                 bgNode.scrollUp()
-                println("scrolled to \(bgNode.position.y)")
             }
         } else if ((bitMaskA == ballCat && bitMaskB == stepCat) || (bitMaskA == stepCat && bitMaskB == ballCat)) {
-            println(contact.collisionImpulse)
-            contact.bodyB.applyAngularImpulse(max(1350 - contact.collisionImpulse, 0))
+            // Step contact
+            var bodyTop = self.convertPoint(contact.bodyA.node!.position, fromNode: backgroundNode!).y
+            bodyTop += (bitMaskA == stepCat) ? contact.bodyA.node!.frame.height : contact.bodyB.node!.frame.height
+            println("Step contact at \(contact.contactPoint.y) top is at \(bodyTop)")
+            pushBallOnContact(contact.contactPoint, bodyTop: bodyTop)
+        } else if ((bitMaskA == ballCat && bitMaskB == floorCat) || (bitMaskA == floorCat && bitMaskB == ballCat)) {
+            // Floor contact
+            println("Floor contact at \(contact.contactPoint.y)")
+            if contact.contactPoint.y < 4 {
+                ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: 668.750183105469)
+            }
         }
-        
-        // Move action + restitution 0
-//        let floorCat = ContactCategory.Floor.rawValue
-//        
-//        if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
-//            // Ball reached the limit, scroll up
-//            if let bgNode = backgroundNode {
-//                bgNode.scrollUp()
-//                println("scrolled to \(bgNode.position.y)")
-//            }
-//        } else if ((bitMaskA == ballCat && bitMaskB == stepCat) || (bitMaskA == stepCat && bitMaskB == ballCat)) {
-//            ballNode?.removeActionForKey("action_jump")
-//            ballNode?.runAction(SKAction.moveByX(0, y: ballJumpHeight!, duration: 1), withKey: "action_jump")
-//        } else if ((bitMaskA == ballCat && bitMaskB == floorCat) || (bitMaskA == floorCat && bitMaskB == ballCat)) {
-//            ballNode?.removeActionForKey("action_jump")
-//            ballNode?.runAction(SKAction.moveByX(0, y: ballJumpHeight!, duration: 1), withKey: "action_jump")
-//        }
+    }
+    
+    func pushBallOnContact(contactPoint: CGPoint, bodyTop: CGFloat) {
+        if contactPoint.y >= bodyTop {
+            // Modify velocity if touched the top of the step
+            ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: 668.750183105469)
+        } else {
+            // Otherwise just remove the x axis velocity
+            ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
+        }
+    }
+    
+    func normalize(vector : CGVector) -> CGVector {
+        let length = pow(vector.dx, vector.dy)
+        return CGVector(dx: vector.dx / length, dy: vector.dy / length)
+    }
+    
+    func multiplyScalar(vector : CGVector, value : CGFloat) -> CGVector {
+        return CGVector(dx: vector.dx * value, dy: vector.dy * value)
     }
     
 }
