@@ -9,8 +9,6 @@
 import UIKit
 import SpriteKit
 
-// Shift + Cmd + ' = jump and fix next issue
-
 class ViewController: UIViewController {
 
     @IBOutlet weak var skView: SKView!
@@ -35,11 +33,10 @@ class ViewController: UIViewController {
         
         // Add objects
         scene!.addFloor(SKColor.blackColor(), size: CGSize(width: sceneWidth, height: 20))
-        scene!.addBall(SKColor.blueColor(), radius: 30,
-                position: CGPoint(x: sceneWidth / 2, y: sceneHeight / 2))
-        scene!.addCeiling(CGSize(width: sceneWidth, height: 10),
-            position: CGPoint(x: 0, y: sceneHeight * 4 / 5))
-        scene!.addBackground(SKColor.clearColor(), height: 5000)
+        scene!.addBall(SKColor.blueColor(), radius: 30, position: CGPoint(x: sceneWidth / 2, y: 100))
+        let ceilingPos = CGPoint(x: 0, y: sceneHeight * 4 / 5)
+        scene!.addCeiling(CGSize(width: sceneWidth, height: 1), position: ceilingPos)
+        scene!.addBackground(SKColor.clearColor(), height: 5000, ceilPos: ceilingPos)
         
         // Animate scene entry
         let doorOpenX = SKTransition.doorsOpenHorizontalWithDuration(10.0)

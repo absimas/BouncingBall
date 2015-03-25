@@ -11,6 +11,8 @@ import SpriteKit
 import UIKit
 import GLKit
 
+let FLOOR_NAME = "floor_node"
+
 class GameScene: SKScene, SKPhysicsContactDelegate {
     
     enum Direction {
@@ -20,9 +22,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         case West
     }
     
-    var ballJumpHeight : CGFloat?
     var minStepHeight : Int?
-    let FLOOR_NAME = "floor_node"
     let MOVEMENT_STEP = 50 as CGFloat
     let MOVEMENT_TIME = 0.2
     let GROW_TIME = 0.1
@@ -31,6 +31,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     let COLLISION_SCALE_DURATION = 0.2
     let ACTION_MOVEMENT = "action_movement"
     
+    var otherContact = false
     var ballNode: SKNode?
     var backgroundNode: BackgroundNode?
     
@@ -51,10 +52,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func update(currentTime: NSTimeInterval) {
-        // ToDo remove steps which move outside here instead of with an action
-    }
-    
     override init(size: CGSize) {
         super.init(size: size)
         scaleMode = .ResizeFill
@@ -65,8 +62,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         physicsWorld.contactDelegate = self
     }
     
+    override func update(currentTime: NSTimeInterval) {
+        // ToDo remove steps which move outside here instead of with an action
+    }
+    
     override func didMoveToView(view: SKView) {
-        backgroundNode?.addStepsFrom(ballJumpHeight!)
+        backgroundNode?.addStepsFrom(view.frame.height / 2)
     }
     
     // ToDo anchor on the bottom of the ball? so it move up when Y axis is scaled
@@ -89,22 +90,36 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
     }
     
     func addFloor(color: SKColor, size: CGSize) {
-        let floor = SKSpriteNode(color: color, size: size)
-        floor.anchorPoint = CGPoint(x: 0, y: 0)
+        // Add frame node (jump from sides)
+        var node = SKSpriteNode(color: SKColor.clearColor(), size: size)
+        node.anchorPoint = CGPoint(x: 0, y: 0)
         
         // Physics
-        let physicsBody = SKPhysicsBody(edgeLoopFromRect: frame) // use scene frame edges
+        // Extend frame by the floor (prepare for deadly floor)
+        let extendedFrame = CGRect(origin: CGPoint(x: frame.origin.x, y: frame.origin.y - size.height),
+            size: CGSize(width: frame.width, height: frame.height + size.height))
+        var physicsBody = SKPhysicsBody(edgeLoopFromRect: extendedFrame)
+        physicsBody.dynamic = false
+        node.physicsBody = physicsBody
+        addChild(node)
+        
+        // Add floor node
+        node = SKSpriteNode(color: SKColor.redColor(), size: size)
+        node.anchorPoint = CGPoint(x: 0, y: 0)
+        
+        // Physics
+        physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRect(origin: CGPoint(x: 0, y: 0), size: size))
         physicsBody.dynamic = false
         physicsBody.categoryBitMask = ContactCategory.Floor.rawValue
         physicsBody.contactTestBitMask = ContactCategory.Floor.rawValue | ContactCategory.Ball.rawValue
         physicsBody.collisionBitMask = ContactCategory.Floor.rawValue | ContactCategory.Ball.rawValue
-        floor.physicsBody = physicsBody
-        floor.name = FLOOR_NAME
-        addChild(floor)
+        node.physicsBody = physicsBody
+        node.name = FLOOR_NAME
+        addChild(node)
     }
     
-    func addBackground(color: SKColor, height: CGFloat) {
-        backgroundNode = BackgroundNode(size: CGSize(width: frame.width, height: height))
+    func addBackground(color: SKColor, height: CGFloat, ceilPos: CGPoint) {
+        backgroundNode = BackgroundNode(size: CGSize(width: frame.width, height: height), ceilPos: ceilPos)
         backgroundNode?.anchorPoint = CGPoint(x: 0, y: 0)
         addChild(backgroundNode!)
     }
@@ -143,9 +158,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         ball.position = position
         ball.fillColor = color
         addChild(ball)
-        
-        ballJumpHeight = position.y
-        println("height \(ballJumpHeight)")
         
         // Set the main node!
         ballNode = ball
@@ -208,37 +220,52 @@ class GameScene: SKScene, SKPhysicsContactDelegate {
         
         // Remove ball dx velocity
         ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
-        
-        println("Impulse : \(contact.collisionImpulse)")
-        if ((bitMaskA == ballCat && bitMaskB == ceilingCat) || (bitMaskB == ballCat && bitMaskA == ceilingCat)) {
-            // Ceiling contact
-            println("Ceiling contact at \(contact.contactPoint.y)")
-            if let bgNode = backgroundNode {
-                bgNode.scrollUp()
+        switch (bitMaskA, bitMaskB) {
+        case (ballCat, ceilingCat): fallthrough
+        case (ceilingCat, ballCat):
+            println("Ceiling contact after other: \(otherContact)")
+            if !otherContact {
+                if let backgroundNode = backgroundNode {
+                    // Check if ball going up
+                    let ballVelocity = (bitMaskA == ballCat) ? contact.bodyA.velocity : contact.bodyB.velocity
+                    if ballVelocity.dy > 0 {
+                        backgroundNode.scrollUp()
+                    }
+                }
             }
-        } else if ((bitMaskA == ballCat && bitMaskB == stepCat) || (bitMaskA == stepCat && bitMaskB == ballCat)) {
+        case (ballCat, stepCat): fallthrough
+        case (stepCat, ballCat):
             // Step contact
-            var bodyTop = self.convertPoint(contact.bodyA.node!.position, fromNode: backgroundNode!).y
-            bodyTop += (bitMaskA == stepCat) ? contact.bodyA.node!.frame.height : contact.bodyB.node!.frame.height
-            println("Step contact at \(contact.contactPoint.y) top is at \(bodyTop)")
-            pushBallOnContact(contact.contactPoint, bodyTop: bodyTop)
-        } else if ((bitMaskA == ballCat && bitMaskB == floorCat) || (bitMaskA == floorCat && bitMaskB == ballCat)) {
-            // Floor contact
-            println("Floor contact at \(contact.contactPoint.y)")
-            if contact.contactPoint.y < 4 {
-                ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: 668.750183105469)
+            
+            // Check if contacted top
+            let stepNode = (bitMaskA == stepCat) ? contact.bodyA.node : contact.bodyB.node
+            if let stepNode = stepNode {
+                let stepTop = convertPoint(stepNode.position, fromNode: backgroundNode!).y + stepNode.frame.height
+                println("Step contact at \(contact.contactPoint.y) top is at \(stepTop)")
+                
+                // Modify velocity if touched the top of the step
+                if contact.contactPoint.y >= stepTop {
+                    ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: frame.height)
+                }
             }
+        case (ballCat, floorCat): fallthrough
+        case (floorCat, ballCat):
+            if firstScrollCompleted {
+                // Death reached
+                println("DEATH")
+                view?.presentScene(EndScene(size: frame.size))
+            } else {
+                // Floor contact
+                println("Floor contact at \(contact.contactPoint.y)")
+                let floorHeight = (bitMaskA == floorCat) ? contact.bodyA.node?.frame.height : contact.bodyB.node?.frame.height
+                ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: frame.height)
+            }
+        default:
+            println("Other contact!")
+            otherContact = true
+            return
         }
-    }
-    
-    func pushBallOnContact(contactPoint: CGPoint, bodyTop: CGFloat) {
-        if contactPoint.y >= bodyTop {
-            // Modify velocity if touched the top of the step
-            ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: 668.750183105469)
-        } else {
-            // Otherwise just remove the x axis velocity
-            ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
-        }
+        otherContact = false
     }
     
     func normalize(vector : CGVector) -> CGVector {

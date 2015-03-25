@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4086833D1AB9BA63004568D4 /* BackgroundNode.swift */; };
+		40BE963C1AC3040000B09393 /* EndScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BE963B1AC3040000B09393 /* EndScene.swift */; };
+		40BE963E1AC30D9600B09393 /* ClickableLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BE963D1AC30D9600B09393 /* ClickableLabel.swift */; };
 		40DEA06C1AB9889700308FB0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA06B1AB9889700308FB0 /* AppDelegate.swift */; };
 		40DEA06F1AB9889700308FB0 /* BouncingBall.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA06D1AB9889700308FB0 /* BouncingBall.xcdatamodeld */; };
 		40DEA0711AB9889700308FB0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DEA0701AB9889700308FB0 /* ViewController.swift */; };
@@ -30,6 +32,8 @@
 
 /* Begin PBXFileReference section */
 		4086833D1AB9BA63004568D4 /* BackgroundNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundNode.swift; sourceTree = "<group>"; };
+		40BE963B1AC3040000B09393 /* EndScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EndScene.swift; sourceTree = "<group>"; };
+		40BE963D1AC30D9600B09393 /* ClickableLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClickableLabel.swift; sourceTree = "<group>"; };
 		40DEA0661AB9889700308FB0 /* BouncingBall.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BouncingBall.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		40DEA06A1AB9889700308FB0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		40DEA06B1AB9889700308FB0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -88,6 +92,8 @@
 				4086833D1AB9BA63004568D4 /* BackgroundNode.swift */,
 				40DEA0721AB9889700308FB0 /* Main.storyboard */,
 				40DEA08E1AB99AC900308FB0 /* GameScene.swift */,
+				40BE963B1AC3040000B09393 /* EndScene.swift */,
+				40BE963D1AC30D9600B09393 /* ClickableLabel.swift */,
 			);
 			path = BouncingBall;
 			sourceTree = "<group>";
@@ -221,10 +227,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40BE963C1AC3040000B09393 /* EndScene.swift in Sources */,
 				40DEA0711AB9889700308FB0 /* ViewController.swift in Sources */,
 				40DEA08F1AB99AC900308FB0 /* GameScene.swift in Sources */,
 				40DEA06C1AB9889700308FB0 /* AppDelegate.swift in Sources */,
 				40DEA06F1AB9889700308FB0 /* BouncingBall.xcdatamodeld in Sources */,
+				40BE963E1AC30D9600B09393 /* ClickableLabel.swift in Sources */,
 				4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

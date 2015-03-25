@@ -10,36 +10,64 @@ import Foundation
 import SpriteKit
 import UIKit
 
+var firstScrollCompleted = false
+
 class BackgroundNode: SKSpriteNode {
     
-    let SCROLL_DURATION = 0.7
+    let SCROLL_DURATION = 0.5
     let STEP_HEIGHT = CGFloat(20)
     let MIN_STEP_WIDTH = 15
     let MAX_STEP_WIDTH = 60
     let MIN_STEP_DISTANCE = 200 as CGFloat
     var curPosition = 0 as CGFloat
     var steps = [SKNode]()
+    var ceilingPos: CGPoint?
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    init(size: CGSize) {
+    init(size: CGSize, ceilPos: CGPoint) {
         super.init(texture: nil, color: SKColor.clearColor(), size: size)
+        ceilingPos = ceilPos
     }
     
     func scrollUp() {
-        // ToDo disable existing steps so they don't push the ball down
-            // Or place the steps differently / Scroll slower
         if scene is GameScene {
             let ballScene = scene as GameScene?
 
-            if let ballJump = ballScene!.ballJumpHeight {
-                curPosition += ballJump
-                // Move background up
-                addStepsFrom(curPosition);
-                runAction(SKAction.moveByX(0, y: -ballJump, duration: SCROLL_DURATION))
-            }
+            let ballJump = frame.height / 2
+            // Move background up
+            addStepsFrom(ballJump)
+            
+            runAction(SKAction.sequence([
+                SKAction.runBlock {
+                    // Hide the floor at first scroll
+                    if !firstScrollCompleted {
+                        self.makeFloorDeadly()
+                        firstScrollCompleted = true
+                    }
+                    
+                    // Disable interactivity with steps until scene animation is done
+                    for step in self.steps {
+                        step.physicsBody!.categoryBitMask = 0
+                    }
+                },
+                SKAction.moveByX(0, y: -ballJump + ceilingPos!.y - MIN_STEP_DISTANCE, duration: SCROLL_DURATION),
+                SKAction.runBlock {
+                    // Disable interactivity with steps until scene animation is done
+                    for step in self.steps {
+                        step.physicsBody!.categoryBitMask = GameScene.ContactCategory.Step.rawValue
+                    }
+                }
+            ]))
+        }
+    }
+    
+    func makeFloorDeadly() {
+        let floorNode = scene?.childNodeWithName(FLOOR_NAME)
+        if let floorNode = floorNode {
+            floorNode.position.y -= floorNode.frame.height
         }
     }
     
@@ -92,8 +120,18 @@ class BackgroundNode: SKSpriteNode {
         step.runAction(SKAction.repeatActionForever(
             SKAction.sequence([
                 SKAction.runBlock({
+                    // Remove node if it becomes invisible
                     if step.position.y < abs(self.position.y) {
+                        // Remove from parent node
                         step.removeFromParent()
+                        
+                        // Remove from array
+                        let stepCount = self.steps.count
+                        for var i=0; i<stepCount; ++i {
+                            if self.steps[i] == step {
+                                self.steps.removeAtIndex(i)
+                            }
+                        }
                     }
                 }),
                 SKAction.waitForDuration(5000)
