@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		288AF5061AC332A70091E07E /* Resizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 288AF5051AC332A70091E07E /* Resizable.swift */; };
 		4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4086833D1AB9BA63004568D4 /* BackgroundNode.swift */; };
 		40BE963C1AC3040000B09393 /* EndScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BE963B1AC3040000B09393 /* EndScene.swift */; };
 		40BE963E1AC30D9600B09393 /* ClickableLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40BE963D1AC30D9600B09393 /* ClickableLabel.swift */; };
@@ -31,6 +32,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		288AF5051AC332A70091E07E /* Resizable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Resizable.swift; path = ../Resizable.swift; sourceTree = "<group>"; };
 		4086833D1AB9BA63004568D4 /* BackgroundNode.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BackgroundNode.swift; sourceTree = "<group>"; };
 		40BE963B1AC3040000B09393 /* EndScene.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EndScene.swift; sourceTree = "<group>"; };
 		40BE963D1AC30D9600B09393 /* ClickableLabel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClickableLabel.swift; sourceTree = "<group>"; };
@@ -66,6 +68,25 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		288AF5071AC332DC0091E07E /* Scenes */ = {
+			isa = PBXGroup;
+			children = (
+				288AF5051AC332A70091E07E /* Resizable.swift */,
+				40DEA08E1AB99AC900308FB0 /* GameScene.swift */,
+				40BE963B1AC3040000B09393 /* EndScene.swift */,
+			);
+			name = Scenes;
+			sourceTree = "<group>";
+		};
+		288AF5081AC332F10091E07E /* Nodes */ = {
+			isa = PBXGroup;
+			children = (
+				4086833D1AB9BA63004568D4 /* BackgroundNode.swift */,
+				40BE963D1AC30D9600B09393 /* ClickableLabel.swift */,
+			);
+			name = Nodes;
+			sourceTree = "<group>";
+		};
 		40DEA05D1AB9889700308FB0 = {
 			isa = PBXGroup;
 			children = (
@@ -87,13 +108,11 @@
 		40DEA0681AB9889700308FB0 /* BouncingBall */ = {
 			isa = PBXGroup;
 			children = (
+				288AF5081AC332F10091E07E /* Nodes */,
+				288AF5071AC332DC0091E07E /* Scenes */,
 				40DEA0691AB9889700308FB0 /* Supporting Files */,
 				40DEA0701AB9889700308FB0 /* ViewController.swift */,
-				4086833D1AB9BA63004568D4 /* BackgroundNode.swift */,
 				40DEA0721AB9889700308FB0 /* Main.storyboard */,
-				40DEA08E1AB99AC900308FB0 /* GameScene.swift */,
-				40BE963B1AC3040000B09393 /* EndScene.swift */,
-				40BE963D1AC30D9600B09393 /* ClickableLabel.swift */,
 			);
 			path = BouncingBall;
 			sourceTree = "<group>";
@@ -233,6 +252,7 @@
 				40DEA06C1AB9889700308FB0 /* AppDelegate.swift in Sources */,
 				40DEA06F1AB9889700308FB0 /* BouncingBall.xcdatamodeld in Sources */,
 				40BE963E1AC30D9600B09393 /* ClickableLabel.swift in Sources */,
+				288AF5061AC332A70091E07E /* Resizable.swift in Sources */,
 				4086833E1AB9BA63004568D4 /* BackgroundNode.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

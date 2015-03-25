@@ -9,8 +9,10 @@
 import SpriteKit
 import Foundation
 
-class EndScene : SKScene {
+class EndScene : SKScene, Resizable {
     
+    var endLabel : SKLabelNode?
+    var restartLabel : ClickableLabel?
     
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
@@ -18,24 +20,37 @@ class EndScene : SKScene {
     
     override init(size: CGSize) {
         super.init(size: size)
-        // End label
-        var endLabel = SKLabelNode(text: "Game Over...")
-        endLabel.fontName = "Optima-ExtraBlack"
-        endLabel.horizontalAlignmentMode = .Left
-        endLabel.verticalAlignmentMode = .Center
-        endLabel.fontSize = 60
-        
-        endLabel.position = CGPoint(x: size.width / 2 - endLabel.frame.width / 2,
-            y: size.height / 2 - endLabel.frame.height)
-        let endLabelHeight = endLabel.frame.height
-        addChild(endLabel)
+        scaleMode = .AspectFit
+
+        endLabel = SKLabelNode(text: "Game Over...")
+        endLabel!.fontName = "Optima-ExtraBlack"
+        endLabel!.horizontalAlignmentMode = .Left
+        endLabel!.verticalAlignmentMode = .Center
+        endLabel!.fontSize = 60
+        addChild(endLabel!)
         
         // Restart label
-        let restartLabel = endLabel.copy() as SKLabelNode
-        restartLabel.text = "Restart!"
-        restartLabel.fontSize = 40
-        restartLabel.position = CGPoint(x: restartLabel.frame.origin.x, y: restartLabel.frame.origin.y + endLabelHeight)
-        addChild(restartLabel)
+        restartLabel = ClickableLabel(text: "Restart!", began: nil) { () -> () in
+            firstScrollCompleted = false
+            let doorsOpenX = SKTransition.doorsOpenHorizontalWithDuration(TRANSITION_DURATION)
+            self.view?.presentScene(GameScene(size: self.frame.size), transition: doorsOpenX)
+        }
+        restartLabel!.fontName = "Optima-ExtraBlack"
+        restartLabel!.horizontalAlignmentMode = .Left
+        restartLabel!.verticalAlignmentMode = .Center
+        restartLabel!.fontColor = UIColor.redColor()
+        restartLabel!.fontSize = 40
+        addChild(restartLabel!)
+        
+        resize()
+    }
+    
+    func resize() {
+        endLabel!.position = CGPoint(x: size.width / 2 - endLabel!.frame.width / 2,
+            y: size.height / 2 - endLabel!.frame.height)
+        
+        restartLabel!.position = CGPoint(x: size.width / 2 - restartLabel!.frame.width / 2,
+            y: size.height / 2 - restartLabel!.frame.height / 2 - endLabel!.frame.height * 2)
     }
 
 }

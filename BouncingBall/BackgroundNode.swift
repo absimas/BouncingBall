@@ -21,25 +21,19 @@ class BackgroundNode: SKSpriteNode {
     let MIN_STEP_DISTANCE = 200 as CGFloat
     var curPosition = 0 as CGFloat
     var steps = [SKNode]()
-    var ceilingPos: CGPoint?
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    init(size: CGSize, ceilPos: CGPoint) {
-        super.init(texture: nil, color: SKColor.clearColor(), size: size)
-        ceilingPos = ceilPos
-    }
+    var scrollCount = 0
+    var difficulty = 0
     
     func scrollUp() {
         if scene is GameScene {
+            if (scrollCount % 3 == 0) {
+                ++difficulty
+            }
             let ballScene = scene as GameScene?
-
-            let ballJump = frame.height / 2
-            // Move background up
-            addStepsFrom(ballJump)
-            
+            let ballJumpHeight = frame.height / 2
+            let scrollBy = -ballJumpHeight + scene!.size.height * 4.0 / 5.0 - MIN_STEP_DISTANCE
+            addStepsFrom(ballJumpHeight)
+    
             runAction(SKAction.sequence([
                 SKAction.runBlock {
                     // Hide the floor at first scroll
@@ -53,14 +47,15 @@ class BackgroundNode: SKSpriteNode {
                         step.physicsBody!.categoryBitMask = 0
                     }
                 },
-                SKAction.moveByX(0, y: -ballJump + ceilingPos!.y - MIN_STEP_DISTANCE, duration: SCROLL_DURATION),
+                SKAction.moveByX(0, y: scrollBy, duration: SCROLL_DURATION),
                 SKAction.runBlock {
                     // Disable interactivity with steps until scene animation is done
                     for step in self.steps {
-                        step.physicsBody!.categoryBitMask = GameScene.ContactCategory.Step.rawValue
+                        step.physicsBody!.categoryBitMask = STEP_CATEGORY
                     }
                 }
             ]))
+            ++scrollCount
         }
     }
     
@@ -72,7 +67,7 @@ class BackgroundNode: SKSpriteNode {
     }
     
     func addStepsFrom(y: CGFloat) {
-        for i in 1...5 {
+        for i in difficulty...5 {
             addRandomStepFrom(y)
         }
     }
@@ -110,9 +105,9 @@ class BackgroundNode: SKSpriteNode {
         // Physics
         let physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRect(origin: CGPoint(x: 0, y: 0), size: randSize))
         physicsBody.dynamic = false
-        physicsBody.categoryBitMask = GameScene.ContactCategory.Step.rawValue
-        physicsBody.contactTestBitMask = GameScene.ContactCategory.Step.rawValue | GameScene.ContactCategory.Ball.rawValue
-        physicsBody.collisionBitMask = GameScene.ContactCategory.Step.rawValue | GameScene.ContactCategory.Ball.rawValue
+        physicsBody.categoryBitMask = STEP_CATEGORY
+        physicsBody.contactTestBitMask = STEP_CATEGORY | BALL_CATEGORY
+        physicsBody.collisionBitMask = STEP_CATEGORY | BALL_CATEGORY
         physicsBody.affectedByGravity = false
         step.physicsBody = physicsBody
         
