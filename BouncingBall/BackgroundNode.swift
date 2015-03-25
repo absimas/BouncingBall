@@ -120,13 +120,11 @@ class BackgroundNode: SKSpriteNode {
                         // Remove from parent node
                         step.removeFromParent()
                         
-                        // Remove from array
-                        let stepCount = self.steps.count
-                        for var i=0; i<stepCount; ++i {
-                            if self.steps[i] == step {
-                                self.steps.removeAtIndex(i)
-                            }
+                        let index = find(self.steps, step)
+                        if let index = index {
+                            self.steps.removeAtIndex(index)
                         }
+                        // Remove from array
                     }
                 }),
                 SKAction.waitForDuration(5000)
