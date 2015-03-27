@@ -9,6 +9,11 @@
 import UIKit
 import SpriteKit
 
+// ToDo known bugs:
+// all steps can be added too low and reaching the ceiling will be impossible
+// step can be added too far away == impossible to move to it
+// jump height is too low on landscape
+
 let TRANSITION_DURATION = 0.3
 
 class ViewController: UIViewController {

@@ -16,24 +16,24 @@ class BackgroundNode: SKSpriteNode {
     
     let SCROLL_DURATION = 0.5
     let STEP_HEIGHT = CGFloat(20)
-    let MIN_STEP_WIDTH = 15
-    let MAX_STEP_WIDTH = 60
-    let MIN_STEP_DISTANCE = 200 as CGFloat
+    let MIN_DISTANCE_BETWEEN_STEPS = 50 as CGFloat
+    let MAX_DIFFICULTY = 5
     var curPosition = 0 as CGFloat
     var steps = [SKNode]()
     var scrollCount = 0
     var difficulty = 0
-    
+        
     func scrollUp() {
-        if scene is GameScene {
+        if let scene = scene as? GameScene {
             if (scrollCount % 3 == 0) {
-                ++difficulty
+                difficulty = min(difficulty+1, MAX_DIFFICULTY)
             }
             let ballScene = scene as GameScene?
             let ballJumpHeight = frame.height / 2
-            let scrollBy = -ballJumpHeight + scene!.size.height * 4.0 / 5.0 - MIN_STEP_DISTANCE
+            let scrollBy = -ballJumpHeight + scene.size.height * 4.0 / 5.0 - scene.maxStepDistanceFromBall!
+            steps.removeAll(keepCapacity: false)
             addStepsFrom(ballJumpHeight)
-    
+            
             runAction(SKAction.sequence([
                 SKAction.runBlock {
                     // Hide the floor at first scroll
@@ -73,66 +73,60 @@ class BackgroundNode: SKSpriteNode {
     }
     
     func addRandomStepFrom(toY: CGFloat) {
-        if scene == nil {
-            return
-        }
-
-        // Calc random size
-        let randWidth = randInRange(MIN_STEP_WIDTH, upper: MAX_STEP_WIDTH)
-        let randSize = CGSize(width: randWidth, height: STEP_HEIGHT)
-        let step = SKSpriteNode(color: SKColor.greenColor(), size: randSize)
-        step.anchorPoint = CGPoint(x: 0, y: 0)
-        
-        var randPos: CGPoint?
-        var rectMade = (steps.count == 0) ? true : false
-        do {
-            // Calc random position
-            let randX = randInRange(0, upper: Int(scene!.frame.width) - MAX_STEP_WIDTH)
-            let randY = randInRange(Int(toY - MIN_STEP_DISTANCE), upper: Int(toY))
-            randPos = CGPoint(x: randX, y: randY)
+        if let scene = scene as? GameScene {
+            // Calc random size
+            let randWidth = randInRange(scene.minStepWidth, upper: scene.maxStepWidth)
+            let randSize = CGSize(width: randWidth, height: STEP_HEIGHT)
+    //        let step = SKSpriteNode(color: SKColor.greenColor(), size: randSize)
+            let step = SKSpriteNode(texture: SKTexture(imageNamed: "BrickBlock"), color: UIColor.clearColor(), size: randSize)
+            step.anchorPoint = CGPoint(x: 0, y: 0)
             
-            // Check for min distance with existing steps
-            let randRect = CGRect(origin: randPos!, size: randSize)
-            for node in steps {
-                if (minDistance(node.frame, randRect) > 50) {
-                    rectMade = true
-                    break
-                }
-            }
-        } while (!rectMade)
-        step.position = randPos!
-        
-        // Physics
-        let physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRect(origin: CGPoint(x: 0, y: 0), size: randSize))
-        physicsBody.dynamic = false
-        physicsBody.categoryBitMask = STEP_CATEGORY
-        physicsBody.contactTestBitMask = STEP_CATEGORY | BALL_CATEGORY
-        physicsBody.collisionBitMask = STEP_CATEGORY | BALL_CATEGORY
-        physicsBody.affectedByGravity = false
-        step.physicsBody = physicsBody
-        
-        // Check every 5 seconds if the node should be remvoed
-        step.runAction(SKAction.repeatActionForever(
-            SKAction.sequence([
-                SKAction.runBlock({
-                    // Remove node if it becomes invisible
-                    if step.position.y < abs(self.position.y) {
-                        // Remove from parent node
-                        step.removeFromParent()
-                        
-                        let index = find(self.steps, step)
-                        if let index = index {
-                            self.steps.removeAtIndex(index)
-                        }
-                        // Remove from array
+            var randPos: CGPoint?
+            var rectMade = (steps.count == 0) ? true : false
+            do {
+                // Calc random position
+                let randX = randInRange(0, upper: Int(scene.frame.width) - scene.maxStepWidth)
+                let randY = randInRange(Int(toY - scene.maxStepDistanceFromBall!), upper: Int(toY))
+                randPos = CGPoint(x: randX, y: randY)
+                rectMade = true
+                
+                // Check for min distance with existing steps
+                let randRect = CGRect(origin: randPos!, size: randSize)
+                for node in steps {
+                    if (minDistance(node.frame, randRect) < MIN_DISTANCE_BETWEEN_STEPS) {
+                        rectMade = false
+                        break
                     }
-                }),
-                SKAction.waitForDuration(5000)
-            ])
-        ))
-        
-        steps += [step]
-        addChild(step)
+                }
+            } while (!rectMade)
+            step.position = randPos!
+            
+            // Physics
+            let physicsBody = SKPhysicsBody(edgeLoopFromRect: CGRect(origin: CGPoint(x: 0, y: 0), size: randSize))
+            physicsBody.dynamic = false
+            physicsBody.categoryBitMask = STEP_CATEGORY
+            physicsBody.contactTestBitMask = STEP_CATEGORY | BALL_CATEGORY
+            physicsBody.collisionBitMask = STEP_CATEGORY | BALL_CATEGORY
+            physicsBody.affectedByGravity = false
+            step.physicsBody = physicsBody
+            
+            // Check every 5 seconds if the node should be remvoed
+            step.runAction(SKAction.repeatActionForever(
+                SKAction.sequence([
+                    SKAction.runBlock({
+                        // Remove node if it becomes invisible
+                        if step.position.y < abs(self.position.y) {
+                            // Remove from parent node
+                            step.removeFromParent()
+                        }
+                    }),
+                    SKAction.waitForDuration(5000)
+                ])
+            ))
+            
+            steps += [step]
+            addChild(step)
+        }
     }
     
     func randInRange(lower: Int , upper: Int) -> CGFloat {
@@ -140,6 +134,9 @@ class BackgroundNode: SKSpriteNode {
     }
     
     func minDistance(a: CGRect, _ b: CGRect) -> CGFloat {
+        if a.intersects(b) {
+            return 0
+        }
         let deltaX = b.origin.x - a.origin.x
         let deltaY = b.origin.y - a.origin.y
         let delta = abs(deltaX) > abs(deltaY) ? deltaX : deltaY

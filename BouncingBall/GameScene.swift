@@ -27,7 +27,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         case West
     }
     
-    var minStepHeight : Int?
     let MOVEMENT_STEP = 50 as CGFloat
     let MOVEMENT_TIME = 0.2
     let GROW_TIME = 0.1
@@ -35,16 +34,21 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
     let COLLISION_SCALE = 0.7 as CGFloat
     let COLLISION_SCALE_DURATION = 0.2
     let ACTION_MOVEMENT = "action_movement"
-    
-    var otherContact = false
-    
+
     // Limits
     let maxScaleBy = 4/5.0 as CGFloat
     let maxImpulse = 900 as CGFloat
     let minImpulse = 100 as CGFloat
     let backgroundHeight = 5000 as CGFloat
+
+    var maxStepDistanceFromBall : CGFloat?
+    var minStepHeight : Int?
+    var minStepWidth = 15
+    var maxStepWidth = 60
+    var otherContact = false
     
     // Nodes
+    var gradientBackgroundNode: SKSpriteNode?
     var backgroundNode: BackgroundNode?
     var floorNode: SKSpriteNode?
     var ceilingNode: SKSpriteNode?
@@ -65,8 +69,8 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         physicsBody?.contactTestBitMask = SCENE_CATEGORY | BALL_CATEGORY
         physicsBody?.collisionBitMask = SCENE_CATEGORY | BALL_CATEGORY
         
-        
         // Init nodes
+        addGradientBackground()
         addFloor()
         addBall(SKColor.blueColor(), radius: 30,
             position: CGPoint(x: size.width / 2 - 30, y: 0 + 30 * 2 + 10))
@@ -75,6 +79,68 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         
         resize()
     }
+    
+    func addGradientBackground() {
+        // Gradient Image
+        let maxWidthHeight = max(frame.height, frame.width)
+        let gradientImage = drawGradientImage(CGSize(width: maxWidthHeight, height: maxWidthHeight)) // call the func using the instance
+        
+        // ImageView
+        let imageView = UIImageView(frame: CGRect(origin: CGPoint(x: 0, y: 0), size: frame.size))
+        imageView.image = gradientImage
+
+        // Node
+        gradientBackgroundNode = SKSpriteNode(texture: SKTexture(image: gradientImage))
+        addChild(gradientBackgroundNode!)
+    }
+    
+    func drawGradientImage(size: CGSize) -> UIImage {
+        
+        // Setup our context
+        let bounds = CGRect(origin: CGPoint.zeroPoint, size: size)
+        let opaque = false
+        let scale: CGFloat = 0
+        UIGraphicsBeginImageContextWithOptions(size, opaque, scale)
+        let context = UIGraphicsGetCurrentContext()
+        
+        // gradient colours for a nice sky effect
+        let topColour = UIColor(red: 60.0/255.0, green: 60.0/255.0, blue: 60.0/255.0, alpha:1.000)
+        let midColour = UIColor(red: 152.0/255.0, green: 152.0/255.0, blue:152.0/255.0, alpha:1.000)
+        let bottomColour = UIColor(red: 60.0/255.0, green: 60.0/255.0, blue: 60.0/255.0, alpha:1.000)
+        
+        // set up gradient array
+        let gradientColours: [CGColor] = [topColour.CGColor, midColour.CGColor, bottomColour.CGColor]
+        
+        // set up gradient spread
+        let gradientLocations: [CGFloat] = [0.0, 0.5, 1.0] // top, middle and bottom of the frame
+        
+        // now make a gradient that can be applied to the path rect
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        
+        let gradient = CGGradientCreateWithColors(
+            colorSpace,
+            gradientColours,
+            gradientLocations)
+        
+        // make a gradient layer
+        let gradientLayer: CAGradientLayer = CAGradientLayer()
+        gradientLayer.colors = gradientColours
+        gradientLayer.locations = gradientLocations
+        
+        // make a rectangle
+        let topPoint = CGPointMake(bounds.width / 2, bounds.height)
+        let bottomPoint = CGPointMake(bounds.width / 2, 0)
+        
+        // Setup complete, do drawing here
+        CGContextDrawLinearGradient(context, gradient, bottomPoint, topPoint, 0)
+        
+        // Drawing complete, retrieve the finished image and cleanup
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return image
+    }
+
 
     override func didMoveToView(view: SKView) {
         backgroundNode?.addStepsFrom(view.frame.height / 2)
@@ -200,6 +266,12 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         
         // Remove ball dx velocity
         ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
+        
+        // Reapply velocity if it's been lost
+        if (ballNode?.physicsBody?.velocity.dy == 0) {
+            ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: frame.height)
+        }
+        
         switch (bitMaskA, bitMaskB) {
         case (BALL_CATEGORY, CEILING_CATEGORY): fallthrough
         case (CEILING_CATEGORY, BALL_CATEGORY):
@@ -232,8 +304,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         case (FLOOR_CATEGORY, BALL_CATEGORY):
             if firstScrollCompleted {
                 // Death reached
-                let doorsCloseX = SKTransition.doorsCloseHorizontalWithDuration(TRANSITION_DURATION)
-                view?.presentScene(EndScene(size: frame.size), transition: doorsCloseX)
+                transitionToEndScene()
             } else {
                 // Floor contact
                 println("Floor contact at \(contact.contactPoint.y)")
@@ -248,7 +319,22 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         otherContact = false
     }
     
+    func transitionToEndScene() {
+        let doorsCloseX = SKTransition.doorsCloseHorizontalWithDuration(TRANSITION_DURATION)
+        view?.presentScene(EndScene(size: frame.size), transition: doorsCloseX)
+    }
+    
     func resize() {
+        // Steps will be generated starting from ball height - 1/3 of the screen
+        maxStepDistanceFromBall = frame.height / 3
+        
+        // Step widths depends on the screen's width
+        minStepWidth = Int(frame.width / 22)
+        maxStepWidth = Int(frame.width / 5)
+        
+        // Gradient background
+        gradientBackgroundNode!.position = CGPoint(x: CGRectGetMidX(frame), y: CGRectGetMidY(frame))
+        
         // Ceiling
         ceilingNode!.size = CGSize(width: frame.width, height: 5)
         ceilingNode!.position = CGPoint(x: 0, y: frame.height * 4.0 / 5.0) // ToDo don't hardcode
