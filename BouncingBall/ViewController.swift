@@ -26,11 +26,11 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Debug
-        skView.showsPhysics = true
+//        skView.showsPhysics = true
         skView.showsFPS = true
-        skView.showsDrawCount = true
+//        skView.showsDrawCount = true
         skView.showsNodeCount = true
-        skView.showsQuadCount = true
+//        skView.showsQuadCount = true
         
         skView.presentScene(GameScene(size: view.frame.size))
     }

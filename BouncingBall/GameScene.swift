@@ -90,7 +90,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         imageView.image = gradientImage
 
         // Node
-        gradientBackgroundNode = SKSpriteNode(texture: SKTexture(image: gradientImage))
+        gradientBackgroundNode = SKSpriteNode(color: SKColor.grayColor(), size: frame.size)
         addChild(gradientBackgroundNode!)
     }
     
@@ -103,7 +103,6 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         UIGraphicsBeginImageContextWithOptions(size, opaque, scale)
         let context = UIGraphicsGetCurrentContext()
         
-        // gradient colours for a nice sky effect
         let topColour = UIColor(red: 60.0/255.0, green: 60.0/255.0, blue: 60.0/255.0, alpha:1.000)
         let midColour = UIColor(red: 152.0/255.0, green: 152.0/255.0, blue:152.0/255.0, alpha:1.000)
         let bottomColour = UIColor(red: 60.0/255.0, green: 60.0/255.0, blue: 60.0/255.0, alpha:1.000)
@@ -174,7 +173,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         
         // Floor Node
         floorNode = SKSpriteNode()
-        floorNode!.color = SKColor.redColor()
+        floorNode!.color = SKColor.blackColor()
         floorNode!.anchorPoint = CGPoint(x: 0, y: 0)
         floorNode!.name = FLOOR_NAME
         addChild(floorNode!)
@@ -189,7 +188,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
     
     func addCeiling() {
         ceilingNode = SKSpriteNode()
-        ceilingNode!.color = SKColor.redColor()
+        ceilingNode!.color = SKColor.whiteColor()
         ceilingNode!.anchorPoint = CGPoint(x: 0, y: 0)
         addChild(ceilingNode!)
     }
@@ -218,9 +217,9 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         node.runAction(SKAction.scaleBy(1.04, duration: duration))
     }
     
-    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         // Select 1st touch
-        var touch = touches.allObjects[0] as UITouch
+        var touch = touches.first as! UITouch
         
         // Find the direction (the furthest point from the mainNode)
         let direction = findDirection(ballNode!.position, touchPos: touch.locationInNode(self))
@@ -251,11 +250,11 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         }
     }
     
-    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         ballNode!.removeActionForKey(ACTION_MOVEMENT)
     }
     
-    override func touchesCancelled(touches: NSSet!, withEvent event: UIEvent!) {
+    override func touchesCancelled(touches: Set<NSObject>!, withEvent event: UIEvent!) {
         touchesEnded(touches, withEvent: event)
     }
     
@@ -267,7 +266,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate, Resizable {
         // Remove ball dx velocity
         ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: ballNode!.physicsBody!.velocity.dy)
         
-        // Reapply velocity if it's been lost
+        // Re-apply velocity if it's been lost
         if (ballNode?.physicsBody?.velocity.dy == 0) {
             ballNode?.physicsBody?.velocity = CGVector(dx: 0, dy: frame.height)
         }

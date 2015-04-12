@@ -17,7 +17,7 @@ class BackgroundNode: SKSpriteNode {
     let SCROLL_DURATION = 0.5
     let STEP_HEIGHT = CGFloat(20)
     let MIN_DISTANCE_BETWEEN_STEPS = 50 as CGFloat
-    let MAX_DIFFICULTY = 5
+    let MAX_DIFFICULTY = 4
     var curPosition = 0 as CGFloat
     var steps = [SKNode]()
     var scrollCount = 0
@@ -60,24 +60,38 @@ class BackgroundNode: SKSpriteNode {
     }
     
     func makeFloorDeadly() {
-        let floorNode = scene?.childNodeWithName(FLOOR_NAME)
-        if let floorNode = floorNode {
-            floorNode.position.y -= floorNode.frame.height
+        if let scene = scene as? GameScene {
+            // Move floor below screen
+            if let floorNode = scene.floorNode {
+                floorNode.position.y -= floorNode.frame.height
+            }
+            
+            // Prevent ball from contacting the floor
+            if let ballNode = scene.ballNode {
+                ballNode.physicsBody?.collisionBitMask &= ~FLOOR_CATEGORY
+                ballNode.physicsBody?.contactTestBitMask &= ~FLOOR_CATEGORY
+            }
         }
     }
     
     func addStepsFrom(y: CGFloat) {
-        for i in difficulty...5 {
-            addRandomStepFrom(y)
+        if let scene = scene as? GameScene {
+            let fromY = Int(y - scene.maxStepDistanceFromBall!)
+            let toY = Int(y)
+            // First add a step that will definitely allow reaching the top
+            addRandomStep(toY, toY: toY)
+            // Then add other random steps
+            for i in difficulty...4 {
+                addRandomStep(fromY, toY: toY)
+            }
         }
     }
     
-    func addRandomStepFrom(toY: CGFloat) {
+    func addRandomStep(fromY: Int, toY: Int) {
         if let scene = scene as? GameScene {
             // Calc random size
-            let randWidth = randInRange(scene.minStepWidth, upper: scene.maxStepWidth)
+            let randWidth = randInRange(scene.minStepWidth, scene.maxStepWidth)
             let randSize = CGSize(width: randWidth, height: STEP_HEIGHT)
-    //        let step = SKSpriteNode(color: SKColor.greenColor(), size: randSize)
             let step = SKSpriteNode(texture: SKTexture(imageNamed: "BrickBlock"), color: UIColor.clearColor(), size: randSize)
             step.anchorPoint = CGPoint(x: 0, y: 0)
             
@@ -85,8 +99,8 @@ class BackgroundNode: SKSpriteNode {
             var rectMade = (steps.count == 0) ? true : false
             do {
                 // Calc random position
-                let randX = randInRange(0, upper: Int(scene.frame.width) - scene.maxStepWidth)
-                let randY = randInRange(Int(toY - scene.maxStepDistanceFromBall!), upper: Int(toY))
+                let randX = randInRange(0, Int(scene.frame.width) - scene.maxStepWidth)
+                let randY = randInRange(fromY, toY)
                 randPos = CGPoint(x: randX, y: randY)
                 rectMade = true
                 
@@ -129,7 +143,7 @@ class BackgroundNode: SKSpriteNode {
         }
     }
     
-    func randInRange(lower: Int , upper: Int) -> CGFloat {
+    func randInRange(lower: Int , _ upper: Int) -> CGFloat {
         return CGFloat(lower + Int(arc4random_uniform(UInt32(upper - lower + 1))))
     }
     

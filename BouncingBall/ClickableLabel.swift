@@ -39,14 +39,14 @@ class ClickableLabel : SKLabelNode {
     }
     
     init(text: String, began: (()->())?, ended: (()->())?) {
+        callbackBegan = began
+        callbackEnded = ended
         super.init()
         userInteractionEnabled = true
         self.text = text
-        callbackBegan = began
-        callbackEnded = ended
     }
     
-    override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesBegan(touches: Set<NSObject>, withEvent event: UIEvent) {
         // Darken color
         fontColor = SKColor(hue: hue, saturation: saturation, brightness: brightness, alpha: colorAlpha - 0.3)
         if let callbackBegan = callbackBegan {
@@ -54,7 +54,7 @@ class ClickableLabel : SKLabelNode {
         }
     }
     
-    override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
+    override func touchesEnded(touches: Set<NSObject>, withEvent event: UIEvent) {
         // Revert to normal
         fontColor = SKColor(hue: hue, saturation: saturation, brightness: brightness, alpha: colorAlpha)
         if let callbackEnded = callbackEnded {
